@@ -84,3 +84,5 @@ runs:
         asset_path: ./build/package/${{ github.event.repository.name }}.${{ inputs.release-version }}.nupkg
         asset_name: ${{ github.event.repository.name }}-v${{ inputs.release-version }}.nupkg
         asset_content_type: application/octet-stream
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
