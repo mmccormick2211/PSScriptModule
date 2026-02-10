@@ -66,3 +66,18 @@ runs:
         Set-StrictMode -Version Latest
         [void] (Import-Module InvokeBuild)
         Invoke-Build -NugetApiKey ${{ env.PSGALLERY_API_KEY }} -Task Publish
+
+    - name: Publish build package to Github Release
+      shell: pwsh
+      run: |
+        Set-StrictMode -Version Latest
+        [void] (Import-Module InvokeBuild)
+        Invoke-Build -Task Package
+
+    - name: Upload build package to Github Release
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./build/package/*.nupkg
+        asset_name: ${{ github.event.repository.name }}-v${{ inputs.release-version }}.nupkg
+        asset_content_type: application/octet-stream
