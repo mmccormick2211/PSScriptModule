@@ -51,13 +51,16 @@ runs:
         Write-Output 'EOF' >> $env:GITHUB_OUTPUT
 
     - name: Create release
-      uses: ncipollo/release-action@v1
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: Release v${{ inputs.release-version }}
-        tag: v${{ inputs.release-version }}
+        tag_name: v${{ inputs.release-version }}
+        release_name: Release v${{ inputs.release-version }}
         body: ${{ steps.generate_release_notes.outputs.releaseNotes }}
+        draft: false
         prerelease: ${{ inputs.release-type == 'Prerelease' }}
-        allowUpdates: true
 
     - name: Publish build package to PSGallery
       if: ${{ inputs.publish-psgallery == 'true' && env.PSGALLERY_API_KEY != '' }}
