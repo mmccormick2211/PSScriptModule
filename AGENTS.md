@@ -1,208 +1,114 @@
 # AI Coding Agent Guidelines
 
-This document provides guidance for AI coding assistants (Copilot, Claude, etc.) when generating code in this repository.  
-All code should be **production-ready, maintainable, tested, and auditable**.
+All generated code must be **production-ready, maintainable, tested, and auditable**.
 
 ---
 
-## Purpose
+## Bias
 
-AI agents must generate code that:
-
-- Preserves existing behavior and public APIs
-- Follows PowerShell best practices
-- Includes proper testing, validation, and error handling
-- Is readable, secure, and auditable
-- Can be integrated into CI/CD pipelines without modification
+- **Prefer**: explicit, simple, pipeline-friendly, and testable functions
+- **Avoid**: aliases, complex abstractions, environment-specific assumptions, and secrets in code
 
 ---
 
-## Hard Rules (Must Follow)
+## Core Principles
 
-- Preserve original exception types and stack traces; never throw strings instead of exceptions
-- Maintain function parameter validation (`[ValidateNotNullOrEmpty()]`, `[ValidateScript()]`, etc.)
-- Do not remove or bypass existing tests, analyzers, or security scans
-- Avoid writing secrets, credentials, or environment-specific paths in code
-- Use approved PowerShell verbs (`Get-Verb`) and proper file naming
-- Always create a `.Tests.ps1` file for each new function
-- Follow begin/process/end pattern for functions that support pipeline input
-- Do not use aliases in production code (e.g., `gci` instead of `Get-ChildItem`)
-- Always include `[CmdletBinding()]` in public functions
+- **Reliability over cleverness** — code must be predictable and behave correctly across all supported platforms
+- **Explicit over implicit** — no hidden side effects; validate parameters at every function boundary
+- **Tested and auditable** — every function must have tests and pass static analysis before merging
 
 ---
 
-## Coding Patterns and Conventions
+## Build & Test Commands
 
-### Function Structure
+```powershell
+# Build module
+Invoke-Build -Task Build
 
-**Public Functions** (exported):
+# Run all tests (unit + static analysis + security scan)
+Invoke-Build -Task Test
 
-- Location: `src/Public/Verb-Noun.ps1`
-- Naming: `Verb-Noun` (approved verbs only)
-- Must have comment-based help
-- Must support pipeline input and `-WhatIf` for destructive operations
+# Run unit tests only
+Invoke-Build -Task UnitTests
 
-**Private Functions** (internal):
+# Run static analysis
+Invoke-Build -Task PSScriptAnalyzer
 
-- Location: `src/Private/VerbNoun.ps1`
-- Naming: descriptive; not exported
-- Used to keep public APIs stable
+# Run security scan
+Invoke-Build -Task InjectionHunter
 
----
+# Generate help documentation
+Invoke-Build -Task Export-CommandHelp
 
-### Error Handling (Recommended Pattern)
-
-Use this simple pattern for all functions:
-
-    try {
-        $result = Invoke-Operation
-    }
-    catch {
-        # Human-readable message
-        Write-Verbose "$($MyInvocation.MyCommand) Operation failed: $_"
-        # Full stack trace for debugging
-        Write-Verbose "StackTrace: $($_.ScriptStackTrace)"
-        # Preserve original exception
-        throw $_
-    }
-
-**Notes:**
-
-- Preserves exception type and stack trace
-- Safe for nested function calls
-- Verbose logging provides context without double logging
-- Optional: append function name chain if deeper context is needed
+# Clean build output
+Invoke-Build -Task Clean
+```
 
 ---
 
-### Parameter Validation
+## Design Principles
 
-    param (
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Name
-    )
-
-- Always validate inputs at function boundaries
-- Use `[ValidateSet()]`, `[ValidateScript()]`, or `[ValidatePattern()]` when applicable
+- **Fail Fast** — validate at the function boundary, throw immediately on invalid input; never let bad data propagate deeper into the call stack
+- **Single Responsibility** — one function, one purpose; if a function needs an "and" to describe what it does, split it
+- **Open-Closed** — extend behavior via parameter sets and new private helpers; do not modify working public APIs
+- **Least Surprise** — functions must behave like built-in cmdlets: support pipeline where it makes sense, return objects not strings, respect `-WhatIf`, and write to the correct streams
 
 ---
 
-### Pipeline Support
+## DO / DO NOT
 
-- Use `begin {}`, `process {}`, `end {}` blocks for pipeline processing
-- Collect results in `begin { $results = [System.Collections.Generic.List[object]]::new() }`
-- Return results in `end { return $results }`
+### DO
 
----
+- Use `[CmdletBinding()]` and `[OutputType()]` on every function
+- Use approved PowerShell verbs — verify with `Get-Verb`
+- Validate parameters with `[ValidateNotNullOrEmpty()]`, `[ValidateSet()]`, `[ValidateScript()]`, or `[ValidatePattern()]`
+- Use `begin`/`process`/`end` blocks for pipeline-accepting functions; collect in `begin`, add in `process`, return in `end`
+- Add `SupportsShouldProcess` and call `$PSCmdlet.ShouldProcess()` for destructive operations; omit for read-only functions
+- Include comment-based help with `.SYNOPSIS`, `.DESCRIPTION`, `.PARAMETER`, `.INPUTS`, `.OUTPUTS`, and `.EXAMPLE`
+- In `catch`, log context with `Write-Verbose "$($MyInvocation.MyCommand) failed for '$Input': $_"` then `throw $_`
+- Create a `.Tests.ps1` file alongside every new function
 
-### Comment-Based Help Template
+### DO NOT
 
-    function Verb-Noun {
-        <#
-        .SYNOPSIS
-            One-line description
-
-        .DESCRIPTION
-            Detailed description
-
-        .PARAMETER Name
-            Description of parameter
-
-        .EXAMPLE
-            Verb-Noun -Name 'Test'
-
-        .OUTPUTS
-            Type returned
-
-        .NOTES
-            Additional notes
-        #>
-    }
+- Never throw strings — always re-throw the original exception (`throw $_`)
+- Never remove or bypass tests, PSScriptAnalyzer, or security scans
+- Never use aliases (`Get-ChildItem`, not `gci`)
+- Never write secrets, credentials, or environment-specific paths in code
+- Never ignore or silently swallow errors
+- Never use `Write-Host` — use `Write-Verbose`, `Write-Warning`, or `Write-Error` instead
+- Never mix output types from the same function
+- Never manually update `FunctionsToExport` in the module manifest — it is populated automatically by the build
 
 ---
 
-## Testing Guidelines
+## File Layout
 
-- Every function must have a corresponding `.Tests.ps1` file
-- Use Pester 5+ for unit tests
-- Test **both success and failure scenarios**
-- Mock external dependencies as needed
-- Ensure code coverage ≥ 80%
-- Do not bypass tests or analyzers
+| Type                    | Location                      | Naming                                                          |
+|-------------------------|-------------------------------|-----------------------------------------------------------------|
+| Public function + test  | `src/Public/Verb-Noun.ps1`    | `Verb-Noun` — approved verb, hyphen required                    |
+| Private function + test | `src/Private/VerbNoun.ps1`    | `VerbNoun` — PascalCase, no hyphen, not exported                |
+| Classes                 | `src/Classes/ClassName.ps1`   | `ClassName` — PascalCase; loaded before functions by the build  |
 
-**Example Test Structure:**
-
-    Describe 'Verb-Noun' {
-        Context 'Parameter Validation' {
-            It 'Should require mandatory parameters' { { Verb-Noun } | Should -Throw }
-        }
-        Context 'Functionality' {
-            It 'Should return expected result' { 
-                $result = Verb-Noun -Name 'Test'
-                $result | Should -Not -BeNullOrEmpty
-            }
-        }
-    }
+Public functions are automatically exported by the build. Private functions must **not** follow `Verb-Noun` naming to avoid accidental export. Classes are available to all module consumers but are not listed in `FunctionsToExport`.
 
 ---
 
-## CI/CD and Quality
+## Testing
 
-- Ensure PSScriptAnalyzer passes with no errors
-- Security scans must pass
-- Automated pipelines should run tests and build checks on every pull request
-- Maintain semantic versioning with proper commit messages
-
----
-
-## Quick Reference for AI Agents
-
-- Preserve **behavior, types, and stack traces**
-- Always include **parameter validation**
-- Use `[CmdletBinding()]` and `-WhatIf` support
-- Throw original exceptions; log context in `Write-Verbose`
-- Keep code **readable, maintainable, and auditable**
-- Write tests for every new function
-- Follow approved PowerShell verbs and naming conventions
-- Use `begin/process/end` for pipeline support
-- Do not write secrets or environment-specific values
+- Use Pester 5+
+- Mock all external dependencies
+- Cover parameter validation, success, and failure scenarios
+- Target ≥ 70% code coverage
 
 ---
 
-## Example AI-Friendly Function Template
+## Commit Messages
 
-    function Get-Something {
-        [CmdletBinding()]
-        param (
-            [Parameter(Mandatory, ValueFromPipeline)]
-            [ValidateNotNullOrEmpty()]
-            [string]$Name
-        )
+Use `+semver:` tags to control version bumps:
 
-        begin { Write-Verbose "Starting $($MyInvocation.MyCommand)" }
-
-        process {
-            try {
-                # Implementation goes here
-            }
-            catch {
-                Write-Verbose "$($MyInvocation.MyCommand) failed: $_"
-                Write-Verbose "StackTrace: $($_.ScriptStackTrace)"
-                throw $_
-            }
-        }
-
-        end { Write-Verbose "Completed $($MyInvocation.MyCommand)" }
-    }
-
----
-
-✅ **Summary:**  
-
-Follow this document when generating code in this repository. This ensures:
-
-- Consistent, maintainable, and auditable code
-- Proper error handling and logging
-- Pipeline-friendly, tested, and secure functions
-- AI agents generate **safe and production-ready** code without human rework
+| Tag                                     | Effect             |
+|-----------------------------------------|--------------------|
+| `+semver: breaking` or `+semver: major` | Major version bump |
+| `+semver: feature` or `+semver: minor`  | Minor version bump |
+| `+semver: fix` or `+semver: patch`      | Patch version bump |
+| `+semver: none` or `+semver: skip`      | No bump            |
