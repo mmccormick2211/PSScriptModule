@@ -7,32 +7,21 @@ changelog:
     - title: 💥 Breaking Changes
       labels:
         - breaking
-        - major
     - title: 🚀 Features
       labels:
-        - feature
-        - enhancement
-    - title: 🐛 Bugfixes
+        - feat
+    - title: 🐛 Bug Fixes
       labels:
-        - bugfix
         - fix
-    - title: ⚡ Performance Improvements
+    - title: ♻️ Refactoring
       labels:
-        - performance
-    - title: 🧑‍💻 Developer Experience
-      labels:
-        - vscode
-        - devcontainer
-    - title: 🧪 Tests
-      labels:
-        - tests
-    - title: 🛠️ Build and CI
-      labels:
-        - build
-        - ci-cd
-    - title: 📦 Dependencies
-      labels:
-        - dependencies
+        - refactor
     - title: 📚 Documentation
       labels:
         - docs
+    - title: 📦 Dependencies
+      labels:
+        - dependencies
+    - title: 🔧 Chore
+      labels:
+        - chore

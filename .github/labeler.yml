@@ -2,31 +2,97 @@
 # Automatically labels pull requests based on file paths changed
 # https://github.com/actions/labeler
 
-# Path-based labels
+# ── Semantic labels (drive changelog categories) ──────────────────────────────
+
+feat:
+  - head-branch: ['^feat/', '^feature/', '^add/']
+
+fix:
+  - head-branch: ['^fix/', '^bugfix/', '^hotfix/', '^patch/', '^security/', '^sec/']
+
+breaking:
+  - head-branch: ['^breaking/', '^major/']
+
+docs:
+  - head-branch: ['^docs/', '^doc/']
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'docs/**/*.md'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'AGENTS.md'
+      - '.github/copilot-instructions.md'
+
+chore:
+  - head-branch: ['^chore/']
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/**/*'
+      - '.github/actions/**/*'
+      - '.github/CODEOWNERS'
+      - '.github/ISSUE_TEMPLATE/**/*'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/CODE_OF_CONDUCT.md'
+      - '.github/SECURITY.md'
+      - '.github/SUPPORT.md'
+      - '.github/FUNDING.yml'
+      - '.github/labeler.yml'
+      - '.github/release.yml'
+      - '.github/DOCS_TEMPLATE/**/*'
+      - '.vscode/**/*'
+      - '.devcontainer/**/*'
+      - '*.build.ps1'
+      - 'GitVersion.yml'
+      - 'tests/**/*'
+      - '.gitignore'
+
+refactor:
+  - head-branch: ['^refactor/', '^refac/', '^cleanup/']
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'requirements.psd1'
+      - '.github/dependabot.yml'
+
+# ── Visual signal labels (reviewer context, not in changelog) ─────────────────
+
+agents:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'AGENTS.md'
+      - '.github/copilot-instructions.md'
+
 cmdlets:
   - changed-files:
     - any-glob-to-any-file:
       - 'src/**/*.ps1'
       - 'src/**/*.psd1'
+      - '!src/**/*.Tests.ps1'
 
 tests:
   - changed-files:
     - any-glob-to-any-file:
-      - 'tests/**/*.Tests.ps1'
       - 'src/**/*.Tests.ps1'
+      - 'tests/Integration/**/*'
 
-docs:
+lint:
   - changed-files:
     - any-glob-to-any-file:
-      - 'docs/**/*.md'
-      - '*.md'
+      - 'tests/PSScriptAnalyzer/**/*'
+
+security:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'tests/InjectionHunter/**/*'
 
 build:
   - changed-files:
     - any-glob-to-any-file:
       - '*.build.ps1'
+      - 'GitVersion.yml'
 
-ci-cd:
+ci:
   - changed-files:
     - any-glob-to-any-file:
       - '.github/workflows/**/*'
@@ -34,7 +100,21 @@ ci-cd:
 
 github:
   - changed-files:
-    - any-glob-to-any-file: '.github/**/*'
+    - any-glob-to-any-file:
+      - '.github/CODEOWNERS'
+      - '.github/ISSUE_TEMPLATE/**/*'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/CODE_OF_CONDUCT.md'
+      - '.github/SECURITY.md'
+      - '.github/SUPPORT.md'
+      - '.github/FUNDING.yml'
+      - '.github/labeler.yml'
+      - '.github/release.yml'
+
+template:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/DOCS_TEMPLATE/**/*'
 
 vscode:
   - changed-files:
@@ -43,43 +123,3 @@ vscode:
 devcontainer:
   - changed-files:
     - any-glob-to-any-file: '.devcontainer/**/*'
-
-dependencies:
-  - changed-files:
-    - any-glob-to-any-file:
-      - 'requirements.psd1'
-      - '.github/dependabot.yml'
-
-# Branch-based labels
-breaking:
- - head-branch: ['^breaking', 'breaking', 'major']
-
-feature:
- - head-branch: ['^feature', 'feature', 'enhancement', 'feat', 'add', 'minor']
-
-bugfix:
- - head-branch: ['^bugfix', 'bugfix', 'fix', 'patch', 'hotfix']
-
- # Conventional Commit-based labels
-conventional-commits:
-- type: 'bugfix'
-  nouns: ['bugfix', 'fix', 'patch', 'hotfix']
-  labels: ['bugfix']
-- type: 'feature'
-  nouns: ['feature', 'enhancement', 'feat', 'add', 'minor']
-  labels: ['feature']
-- type: 'breaking'
-  nouns: ['breaking', 'major']
-  labels: ['breaking']
-- type: 'docs'
-  nouns: ['document','documentation']
-  labels: ['docs']
-- type: 'build'
-  nouns: ['build','rebuild']
-  labels: ['build']
-- type: 'performance'
-  nouns: ['performance', 'optimize', 'optimization']
-  labels: ['performance']
-- type: 'config'
-  nouns: ['config', 'conf', 'cofiguration', 'configure']
-  labels: ['config']

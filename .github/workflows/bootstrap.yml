@@ -60,18 +60,25 @@ jobs:
     env:
       LABELS_JSON: |
         [
-          {"name": "dependencies", "color": "ededed", "description": "Dependency updates"},
-          {"name": "documentation", "color": "0075ca", "description": "Improvements or additions to documentation"},
-          {"name": "tests", "color": "d876e3", "description": "Related to tests"},
-          {"name": "devcontainer", "color": "0e8a16", "description": "Related to development container"},
-          {"name": "vscode", "color": "1d76db", "description": "Related to Visual Studio Code settings"},
-          {"name": "ci-cd", "color": "bfdadc", "description": "Related to GitHub Actions CI"},
-          {"name": "build", "color": "5319e7", "description": "Build related changes"},
-          {"name": "github", "color": "6e5494", "description": "GitHub configuration changes"},
-          {"name": "breaking", "color": "ff0000", "description": "Breaking changes"},
-          {"name": "feature", "color": "0e8a16", "description": "New feature or enhancement"},
-          {"name": "bugfix", "color": "d73a4a", "description": "Bug fix"},
-          {"name": "performance", "color": "5319e7", "description": "Performance improvements"}
+          {"name": "breaking", "color": "ff0000", "description": "Breaking change"},
+          {"name": "chore", "color": "ededed", "description": "Maintenance, tooling, or housekeeping"},
+          {"name": "dependencies", "color": "bfd4f2", "description": "Dependency updates"},
+          {"name": "docs", "color": "0075ca", "description": "Documentation changes"},
+          {"name": "feat", "color": "0e8a16", "description": "New feature or enhancement"},
+          {"name": "fix", "color": "d73a4a", "description": "Bug fix"},
+          {"name": "ignore", "color": "ededed", "description": "Exclude this PR from the release changelog"},
+          {"name": "refactor", "color": "5319e7", "description": "Code refactoring without behavior change"},
+          {"name": "agents", "color": "e4e669", "description": "AI agent guidelines changed"},
+          {"name": "build", "color": "5319e7", "description": "Build script or versioning changed"},
+          {"name": "ci", "color": "bfdadc", "description": "CI/CD workflows or actions changed"},
+          {"name": "cmdlets", "color": "c5def5", "description": "Source functions changed"},
+          {"name": "devcontainer", "color": "006b75", "description": "Dev container changed"},
+          {"name": "github", "color": "6e5494", "description": "GitHub config files changed"},
+          {"name": "lint", "color": "f9d0c4", "description": "PSScriptAnalyzer config changed"},
+          {"name": "security", "color": "e36209", "description": "InjectionHunter config changed"},
+          {"name": "template", "color": "f9d0c4", "description": "Bootstrap template files changed"},
+          {"name": "tests", "color": "d876e3", "description": "Test files changed"},
+          {"name": "vscode", "color": "1d76db", "description": "VS Code settings changed"}
         ]
 
     steps:
